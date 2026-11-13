@@ -365,7 +365,8 @@ PAGES.t1 = {
     const whyP = Object.entries(POLS).map(([k, Q]) => { let ex = 0, n = 0, ab = 0, m = 0; codes.forEach(c => { const a = magg(c, k); if (a.n) { ex += a.ex; n += a.n; m++; if (Q.thn && a.mean > Q.thn) ab++; } }); return { k, l: Q.l, pct: n ? 100 * ex / n : null, ab, m, thn: Q.thn }; }).filter(x => x.pct != null).sort((a, b) => b.pct - a.pct);
     const wp = k => whyP.find(x => x.k === k) || {}, gasMax = Math.max(0, ...whyP.filter(x => !['pm25', 'pm10'].includes(x.k)).map(x => x.pct));
     this._d = { codes, rows, dmb, cap, top, whyP };
-    const lede = `${P.thn ? `<b>${above} dari ${rows.length}</b> stasiun berada di atas baku tahunan (${fi(P.thn)} µg/m³), dengan yang terburuk` : 'Yang terburuk'} di <b>${rows[0] ? stName(rows[0].code) : '–'}</b> (rata-rata ${f(rows[0]?.mean, S.pol === 'co' ? 0 : 1)} µg/m³).`;
+    const trend = worse.length > better.length ? 'cenderung memburuk' : better.length > worse.length ? 'cenderung membaik' : 'relatif stabil';
+    const lede = P.thn ? `${above === rows.length ? 'Seluruh' : above >= rows.length / 2 ? 'Sebagian besar' : 'Sebagian kecil'} stasiun berada di atas baku tahunan, dan udaranya ${trend} dibanding periode yang sama di 2024.` : `Kualitas udara berbeda jauh antarstasiun dan ${trend} dibanding periode yang sama di 2024.`;
     const cols = [{ k: 'code', l: 'Kode' }, { k: 'kota', l: 'Lokasi' }, { k: 'pulau', l: 'Pulau' }, { k: 'kel', l: 'Tipe' }, { k: 'mean', l: `Rata-rata ${P.l}`, num: 1, fmt: v => f(v) }, { k: 'pct', l: `% hari > baku`, num: 1, fmt: v => f(v) }, { k: 'n', l: 'Hari sah', num: 1, fmt: fi }];
     const short = S.to - S.from + 1 < 12;
     return ph({ k: 'Langkah 1 · Kondisi', h: 'Seberapa buruk udara kita?', lede, goal: 1,
@@ -539,7 +540,7 @@ PAGES.t2 = {
     this._d = { codes, kelIn, moyK, eps, cells, kr };
     const yrs = [2024, 2025, 2026];
     return ph({ k: 'Langkah 2 · Waktu & wilayah kritis', h: 'Kapan dan di mana siaga?',
-      lede: `Udara paling kotor sekitar pukul <b>${hh(pk)}</b>${g ? ` dan memuncak di <b>${BULAN_L[g.indexOf(gMax)]}</b> pada stasiun gambut` : ''}, dan <b>${mus.length}</b> stasiun memburuk saat kemarau${kron.length ? ` (hanya <b>${kron.map(x => stName(x.code)).join(', ')}</b> yang buruk sepanjang tahun)` : ''}.`, goal: 2,
+      lede: `Udara paling kotor terjadi di ${pk < 11 ? 'pagi' : pk < 15 ? 'siang' : pk < 19 ? 'sore' : 'malam'} hari dan saat kemarau${kron.length ? ', kecuali di sebagian kota yang buruk sepanjang tahun' : ''}.`, goal: 2,
       scope: `Dasar: data per jam dan harian dari ${codes.length} stasiun · ${term('Episode kabut asap', 'episode')} = ≥3 hari berturut-turut di atas 150,4 µg/m³ · nilai terukur, bukan prediksi.` }) +
       `<div class="grid">
       <h2 class="t-sec">Bulan apa?</h2>
@@ -699,7 +700,7 @@ PAGES.t3 = {
     const WX_JAM = { 'MDN-01': 0.06, 'PLB-01': -0.01 }, wxArt = wxSig.length && wxSig.every(c => c in WX_JAM);
     const wxEx = wxSig.map(c => { const k = ['temp', 'rh', 'ws'].reduce((b, x) => Math.abs(F[c][x] || 0) > Math.abs(F[c][b] || 0) ? x : b, 'temp'); return `${c} (ρ ${{ temp: 'suhu', rh: 'kelembapan', ws: 'angin' }[k]} ${f(F[c][k], 2)})`; });
     return ph({ k: 'Langkah 3 · Faktor', h: 'Apa yang menentukan polusi?',
-      lede: `Penentunya <b>lokasi</b> dan <b>musim</b>, bukan cuaca harian: musim menjelaskan <b>${f(100 * within[0][1], 0)}%</b> naik-turun harian${between.length ? ` dan ${term('tipe lokasi')} <b>${f(100 * between[0][1], 0)}%</b> perbedaan antarstasiun` : ''}, sedangkan suhu, kelembapan, dan angin masing-masing di bawah 1%.`, goal: 3,
+      lede: `Penentu utama polusi adalah <b>lokasi</b> dan <b>musim</b>, bukan cuaca harian.`, goal: 3,
       scope: `Dasar: ${R.length} stasiun · ukuran kekuatan hubungan, bukan bukti sebab-akibat.` }) +
       `<div class="grid">
       <h2 class="t-sec">Faktor terkuat?</h2>
@@ -822,7 +823,7 @@ PAGES.t4 = {
     const cCur = mean(Array.from({ length: cLen }, (_, i) => cH[cw0(S.yr) + i])), cRef = mean(Array.from({ length: cLen }, (_, i) => mean(cOth.map(y => cH[cw0(y) + i]))));
     this._lo = this._lo || 'ispa'; const ld = this._load(this._lo), LO = this._LO.find(x => x[0] === this._lo), ldHiPm = this._lo === 'ispa' ? ld.filter(r => r.pm >= 45 && r.v < 3) : [];
     return ph({ k: 'Langkah 4 · Kesehatan', h: 'Apa dampaknya ke kesehatan?',
-      lede: `Tiap +10 µg/m³ PM2.5, sekitar <b>${f(NRS * (aU + aO), 0)} pasien ISPA tambahan per hari</b> (balita dan lansia) di ${NRS} RS rujukan, <b>pada hari yang sama</b>.`, goal: 4,
+      lede: `Saat PM2.5 naik, jumlah pasien ISPA di rumah sakit rujukan ikut bertambah <b>pada hari yang sama</b>.`, goal: 4,
       scope: `Dasar: ${fi(D.model.n)} ${term('hari-RS')} dari 25 pasangan stasiun–RS · ${term('model')} Poisson efek 0–7 hari · hubungan statistik, bukan sebab-akibat · tidak ikut filter.` }) +
       `      <div class="grid">
       <h2 class="t-sec">Seberapa besar, dan kapan?</h2>
@@ -1012,7 +1013,7 @@ PAGES.t5 = {
     const noSt = provAll.filter(p => !anySt.has(p)), onlyR = provAll.filter(p => anySt.has(p) && !okSt.has(p)), noData = noSt.concat(onlyR), nProv = provAll.length || 38;
     this._prov = { noData, PRI: ['Papua Selatan', 'Jambi', 'Sumatera Selatan'] };
     return ph({ k: (typeof ljKick === 'function' ? ljKick(4, 'Di mana kita buta') : 'Analisis lanjutan') + ' · menjawab T5', h: 'Di mana alat baru dibutuhkan?',
-      lede: `Hanya <b>${nA} dari 27</b> stasiun berdata andal dan <b>${noData.length} dari ${nProv}</b> provinsi belum punya data udara, dengan yang paling mendesak <b>Papua Selatan</b>, <b>pedalaman gambut Jambi</b>, dan <b>Sumatera Selatan</b>.`, goal: 5,
+      lede: `Banyak wilayah belum punya data udara yang andal, sehingga alat pantau baru paling dibutuhkan di beberapa titik tertentu.`, goal: 5,
       scope: `Dasar: semua 27 stasiun, termasuk yang rusak · ${term('andal')} = data sah ≥90% hari · jarak lurus dari koordinat sites.csv.` }) +
       `      <div class="grid">
       <h2 class="t-sec">Sebaran sekarang</h2>
@@ -1149,7 +1150,7 @@ PAGES.rekomendasi = {
     const cnt = k => k === 'semua' ? R.length : R.filter(r => r.aud === k).length, audL = k => AUD.find(x => x[0] === k)[1];
     const vis = R.map((r, i) => ({ ...r, n: i + 1 })).filter(r => (this._aud === 'semua' || r.aud === this._aud) && (!S.pulau.length || r.pulau.some(p => S.pulau.includes(p))));
     const wil = r => r.pulau.length < 5 ? r.pulau.join(', ') : 'Semua pulau';
-    return ph({ k: 'Tindak lanjut', h: 'Apa yang harus dilakukan?', lede: `${R.length} tindakan dari temuan T1–T5 dan analisis lanjutan, diurutkan menurut dampaknya dan masing-masing memuat bukti angka serta tautan ke grafik asalnya.`,
+    return ph({ k: 'Tindak lanjut', h: 'Apa yang harus dilakukan?', lede: `Tindakan disusun dari temuan analisis dan diurutkan menurut dampaknya, masing-masing dengan bukti dan tautan ke grafik asalnya.`,
       right: seg('aud', AUD.map(([k, l]) => [k, `${l} <i class="cnt">${cnt(k)}</i>`]), this._aud) }) +
       (vis.length ? `<div class="rlist">${vis.map(r => `<details class="rl" id="rec${r.n}" style="scroll-margin-top:96px"><summary><span class="rec-n">${r.n}</span><span class="rl-tx"><span class="rl-t">${r.t}</span><span class="rl-s">${wil(r)}</span></span><span class="pill au au-${r.aud}">${audL(r.aud)}</span></summary>
         <div class="rl-b"><div class="rl-m"><p class="rec-what">${r.what}</p><div class="ev"><b>Bukti:</b> ${r.ev}</div><div class="acts"><a class="btn" href="${r.go}" onclick="window.REC_FROM={n:${r.n},p:'${r.go.slice(2).split('?')[0]}',h:hashOf('rekomendasi')};window.SCROLL_TO=(window.REC_EVS[${r.n}]||{}).card?'card-'+window.REC_EVS[${r.n}].card:null">Lihat bukti ${IC.arrow}</a></div></div>
@@ -1260,7 +1261,7 @@ PAGES.metodologi = {
     const cols = [{ k: 'code', l: 'Kode' }, { k: 'kota', l: 'Lokasi' }, { k: 'unit', l: 'Satuan asli' }, { k: 'status', l: 'Status alat' }, { k: 'rows', l: 'Baris', num: 1, fmt: fi }, { k: 'vf', l: '% VALID', num: 1, fmt: v => f(v) }, { k: 'out', l: 'Nilai/waktu mustahil', num: 1, fmt: fi }, { k: 'stuck', l: 'Jam macet', num: 1, fmt: fi }, { k: 'clean', l: '% jam bersih', num: 1, fmt: v => f(v) }, { k: 'days', l: 'Hari sah', num: 1, fmt: fi },
       { k: 'use', l: 'Dipakai sebagai', fmt: v => `<span class="pill ${v === 'andal' ? 'ok' : v === 'parsial' ? 'warn' : 'bad'}">${v}</span>` }];
     this._t = { cols, rows };
-    return ph({ k: 'Data', h: 'Seberapa bisa dipercaya?', lede: `Semua angka dihitung ulang dari 33 file panitia tanpa data tambahan, dan <b>${f(100 * m.clean_hours / tot)}%</b> dari ${fi(tot)} baris per jam lolos pembersihan.` }) +
+    return ph({ k: 'Data', h: 'Seberapa bisa dipercaya?', lede: `Semua angka dihitung ulang dari data panitia tanpa data tambahan, dan sebagian besar data lolos pembersihan.` }) +
       `<div class="grid">
       ${card({ id: 'pipe', span: 's12', title: 'Bagaimana data dibersihkan sebelum dianalisis?', body: `<div class="pipe" style="margin-top:10px">${pipe.map(([b, s, e]) => `<div><b>${b}</b><span>${s}</span><em>${e}</em></div>`).join('')}</div>` })}
       ${card({ id: 'avail', span: 's12', h: 'h520', title: 'Stasiun dan bulan mana yang datanya bolong?', sub: 'Tiap kotak = persen jam yang lolos pembersihan pada satu stasiun dan bulan. Pola gelap-terang memperlihatkan kapan alat bermasalah: BJB-01 (macet Sep 2024–Jun 2025), MDN-01, PLB-01, SM2-01, MER-01, JMB-02.',

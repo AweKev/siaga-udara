@@ -57,7 +57,7 @@ PAGES.ambang = {
     const nB = A.nDay[2], top = Object.entries(A.band).sort((a, b) => b[1] - a[1]).slice(0, 3);
     const pc = v => fp(100 * (v - 1));
     return ph({ k: ljKick(1, 'Kapan harus bertindak'), h: 'Kapan peringatan harus dimulai?',
-      lede: `Hari dengan PM2.5 <b>35–55 µg/m³</b> masih lolos ${term('baku 24 jam', 'baku harian 55')}, tetapi kasus pernapasan di RS rujukan sudah <b>${pc(rr[2])}</b> di atas hari biasa (tercatat <b>${fi(nB)}</b> kali).`,
+      lede: `Kasus pernapasan di RS rujukan sudah naik pada hari yang masih lolos ${term('baku 24 jam', 'baku harian 55')}, jadi peringatan sebaiknya dimulai lebih awal.`,
       scope: 'Seluruh periode Jan 2024–14 Okt 2026 · 25 stasiun andal/parsial dengan RS pasangannya · filter global tidak berlaku' }) +
       `<div class="grid">
       <h2 class="t-sec">Di kadar berapa RS mulai terasa?</h2>
@@ -157,7 +157,7 @@ PAGES.kalender = {
     const e0 = early[0];
     this._t = { stable, early };
     return ph({ k: ljKick(2, 'Kapan harus bersiap'), h: 'Kapan musim asap mulai?',
-      lede: `Di <b>${stable.length} dari ${rows.length}</b> stasiun musiman, musim asap dimulai pada pekan yang sama tiga tahun berturut-turut${e0 ? `, kecuali <b>${esc(stShort(e0.c))}</b> yang maju <b>${-e0.shift} hari</b> dari 2024 ke 2026` : ''}, jadi persiapan bisa dimulai sebelum asap datang.`,
+      lede: `Musim asap datang pada pekan yang hampir sama setiap tahun, jadi persiapan bisa dimulai sebelum asap datang.`,
       scope: `Awal musim = hari pertama sejak 1 Juni dengan rata-rata 7 hari > ${BAKU} µg/m³ · hanya stasiun yang bersih Jan–Mei (kronis tidak dihitung) · filter global tidak berlaku` }) +
       `<div class="grid">
       <h2 class="t-sec">Kapan musim asap mulai?</h2>
@@ -213,7 +213,7 @@ PAGES.rs = {
     const cur = rs.find(r => r.c === this._c) || top, ov = rs.filter(r => r.over > 0).sort((a, b) => b.over - a.over);
     const vk = Object.keys(R.vS).filter(k => k !== 'resp').sort((a, b) => R.vS[b] - R.vS[a]);
     return ph({ k: ljKick(3, 'Apa yang kewalahan'), h: 'Seberapa parah beban RS?',
-      lede: `Sejak 1 Agustus 2026, ${rs.length} RS rujukan mencatat <b>${fi(R.tot)}</b> kematian di atas rata-rata Januari–Mei mereka, dan di <b>${esc(top.nama)}</b> pasien pernapasan sehari mencapai <b>${fi(top.pk)}</b> (${f(top.x, 1)}× hari biasa).`,
+      lede: `Sejak awal Agustus, pasien pernapasan di sejumlah RS rujukan melonjak jauh di atas hari biasa, dan kematian ikut melampaui rata-rata sebelum musim asap.`,
       scope: '1 Agu–14 Okt 2026 dibanding rata-rata Jan–Mei 2026 tiap RS · data RS apa adanya, tanpa model · filter global tidak berlaku' }) +
       `<div class="grid">
       <h2 class="t-sec">Seberapa penuh?</h2>
@@ -278,7 +278,7 @@ PAGES.beban = {
     const B = ljBeban(), r = B.rows, kr = r.filter(x => x.b > x.a).slice(0, 3), mu = r.filter(x => x.a > 2 * x.b).slice(0, 3);
     const k0 = kr[0], m0 = mu[0];
     return ph({ k: ljKick(4, 'Siapa yang terlupakan'), h: 'Beban polusi: kronis vs musiman',
-      lede: `Bila kelebihan PM2.5 di atas ${term('baku tahunan', 'baku tahunan 15')} dijumlah hampir tiga tahun, ${k0 ? `<b>${esc(stShort(k0.c))}</b> (${fi(k0.t)} ribu)` : ''} ${m0 ? `setara <b>${esc(stShort(m0.c))}</b> (${fi(m0.t)} ribu)` : ''}, tetapi ${k0 ? esc(stShort(k0.c)) : 'kota kronis'} menanggungnya setiap hari sehingga tidak pernah memicu status darurat.`,
+      lede: `Bila kelebihan PM2.5 dijumlah, kota yang buruk sepanjang tahun menanggung beban sebesar kota musiman, tetapi tidak pernah memicu status darurat.`,
       scope: 'Seluruh periode Jan 2024–14 Okt 2026 · hari sah · filter global tidak berlaku' }) +
       `<div class="grid">
       <h2 class="t-sec">Siapa menanggung paling banyak?</h2>

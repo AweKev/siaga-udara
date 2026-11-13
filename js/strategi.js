@@ -117,7 +117,7 @@ PAGES.strategi = {
       r: (C.partner.find(p => p.c === c) || {}).r, saran: c === 'PLB-01' ? 'Perbaiki; bebannya ikut naik bersama sabuk asap, jadi perlu dipantau sendiri' : 'Perbaiki dulu; di sini tidak ada stasiun lain yang bisa menggantikan' }));
     const avCl = sgRange(SG_CL.map(c => 100 * st[c].avail));
     return ph({ k: 'Analisis lanjutan · Teori permainan', h: 'Asap tidak mengenal batas provinsi: siapa harus bertindak, bersama siapa, dan siapa membayar?',
-      lede: `Enam kota di Sumatera dan Kalimantan menghirup asap yang naik dan turun di hari yang sama, jadi halaman ini memperlakukannya sebagai <b>permainan</b>: siapa untung bila bertindak, mengapa tidak ada yang mau mulai, dan aturan apa yang membuat semua bergerak. <span class="muted-s">Jendela tetap 1 Agu–14 Okt 2026; filter di atas tidak memengaruhi halaman ini.</span>` }) +
+      lede: `Beberapa kota menghirup asap yang sama, jadi halaman ini melihatnya sebagai <b>permainan</b>: siapa untung bila bertindak dan aturan apa yang membuat semua bergerak. <span class="muted-s">Jendela tetap 1 Agu–14 Okt 2026; filter di atas tidak memengaruhi halaman ini.</span>` }) +
       `<div class="kpis k4">${[
         kpi({ l: 'Jeda antarkota', ic: 'clock', v: '0', u: 'hari', c: `Keenam kota mulai naik pada <b>${onsetTxt}</b> di 2024, 2025, dan 2026`, color: cv('--k-gambut'), go: '#/strategi?sec=serentak',
           info: { rumus: 'Tanggal mulai = hari pertama sejak 1 Juli dengan 3 hari berturut-turut PM2.5 > 2× median Jan–Jun tahun itu. Uji jeda: perubahan harian tiap pasangan stasiun, jeda −5..+5 hari.', data: 'pm25 harian 6 stasiun, 2024–2026', filter: false, cat: `Puncak kecocokan di jeda 0 hari untuk ${lag0} dari ${C.pairs.length} pasangan.` } }),
