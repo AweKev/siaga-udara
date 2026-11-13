@@ -415,9 +415,32 @@ PAGES.t1 = {
       baku: legendRank(P), tipe: legendKel(),
       ubah: [['Membaik (≤ −5%)', '--div-good'], ['Hampir sama', '--div-mid'], ['Memburuk 5–25%', '--seq-3'], ['Memburuk > 25%', '--div-bad']].map(([l, c]) => `<span><i style="background:var(${c})"></i>${l}</span>`).join('') }[tmode]
       + '<span><i style="background:color-mix(in srgb, var(--muted) 22%, var(--surface))"></i>Tidak ada stasiun</span><span><i style="background:var(--muted);border-radius:50%"></i>Titik = stasiun</span>';
+    // tren bulanan, perbandingan tahunan, dan stasiun terhadap baku
+    const yrs = [...new Set(MONTHS.slice(S.from, S.to + 1).map(x => x.slice(0, 4)))];
+    const ySer = yrs.map(y => { const idx = MONTHS.map((x, i) => i).filter(i => i >= S.from && i <= S.to && MONTHS[i].startsWith(y)); const vs = rows.map(r => magg(r.code, S.pol, idx[0], idx[idx.length - 1]).mean).filter(v => v != null);
+      return { y, part: idx.length < 12, last: MONTHS[idx[idx.length - 1]], v: vs.length ? mean(vs) : null }; });
+    const nSt = rows.length, nWho = S.pol === 'pm25' ? rows.filter(r => r.mean > 5).length : null, nThn = P.thn ? rows.filter(r => r.mean > P.thn).length : null;
+    this._tr = { mSer, ySer, nSt, nWho, nThn };
+    const trLo = mSer.reduce((b, v, i) => v != null && (b < 0 || v < mSer[b]) ? i : b, -1);
+    const yFirst = ySer.find(x => x.v != null), yLast = ySer.slice().reverse().find(x => x.v != null);
+    const trLead = pkM >= 0 && trLo >= 0 ? `Puncak <b>${fm(S.from + pkM)}</b> (${f(mSer[pkM], dg)} µg/m³), terendah <b>${fm(S.from + trLo)}</b> (${f(mSer[trLo], dg)}).` : null;
+    const yrLead = yFirst && yLast && yFirst !== yLast ? `Dari ${yFirst.y} ke ${yLast.y}${yLast.part ? ' (sampai ' + fm(MONTHS.indexOf(yLast.last)) + ')' : ''}, rata-rata ${f(yFirst.v, dg)} menjadi <b>${f(yLast.v, dg)}</b> µg/m³ (${fp(100 * (yLast.v / yFirst.v - 1), 0)}).` : null;
+    const bkLead = nWho != null ? `<b>${nSt - nWho}</b> dari ${nSt} stasiun memenuhi pedoman WHO${nThn != null ? `, <b>${nSt - nThn}</b> memenuhi baku tahunan` : ''}.` : (nThn != null ? `<b>${nSt - nThn}</b> dari ${nSt} stasiun memenuhi baku tahunan.` : null);
     return ph({ k: 'Langkah 1 · Kondisi', h: 'Seberapa buruk udara kita?', lede, goal: 1,
       scope: `Dasar: ${rows.length} stasiun berdata · rata-rata dari ${term('hari sah')} · baku PP 22/2021 · nilai terukur, bukan prediksi.` }) +
       `<div class="grid">
+      <h2 class="t-sec">Bagaimana tren-nya?</h2>
+      ${card({ id: 'tren', span: 's12', h: 'h260', title: `Bagaimana ${P.l} berubah tiap bulan?`, sub: `Rata-rata semua stasiun yang dipilih per bulan${S.pol === 'pm25' ? ', dengan garis pedoman WHO dan baku tahunan' : ''}.`, lead: trLead,
+        note: nt(trLead || '', 'Rata-rata antarstasiun yang berdata pada bulan itu; Oktober 2026 hanya sampai 14 Oktober.'),
+        table: () => ({ cols: [{ k: 'b', l: 'Bulan' }, { k: 'v', l: `Rata-rata ${P.l}`, num: 1, fmt: v => f(v, dg) }], rows: mSer.map((v, i) => ({ b: fm(S.from + i), v })) }),
+        info: { rumus: 'Rata-rata bulanan tiap stasiun, lalu dirata-ratakan antarstasiun.', data: `${P.l} harian, ${rows.length} stasiun` } })}
+      ${card({ id: 'thn', span: 's6', h: 'h260', title: 'Apakah tahun ke tahun membaik?', sub: 'Rata-rata setahun (2026 belum penuh).', lead: yrLead,
+        note: nt(yrLead || '', 'Tahun berjalan hanya mencakup bulan yang sudah ada datanya, jadi tidak setara penuh dengan tahun sebelumnya.'),
+        table: () => ({ cols: [{ k: 'y', l: 'Tahun' }, { k: 'v', l: `Rata-rata ${P.l}`, num: 1, fmt: v => f(v, dg) }], rows: ySer.map(x => ({ y: x.y + (x.part ? ' (sebagian)' : ''), v: x.v })) }),
+        info: { rumus: 'Rata-rata per stasiun dalam satu tahun, lalu dirata-ratakan antarstasiun.', data: `${P.l} harian` } })}
+      ${nWho != null || nThn != null ? card({ id: 'bk', span: 's6', h: 'h260', title: 'Berapa stasiun yang memenuhi baku?', sub: 'Rata-rata sepanjang periode terhadap pedoman WHO dan baku tahunan PP 22/2021.', lead: bkLead,
+        note: nt(bkLead || '', 'Dibandingkan memakai rata-rata seluruh periode, bukan satu tahun penuh.'),
+        info: { rumus: 'Stasiun memenuhi bila rata-rata PM2.5 periode ≤ 5 (WHO) atau ≤ 15 µg/m³ (baku tahunan).', data: 'pm25 harian' } }) : ''}
       <h2 class="t-sec">Kenapa PM2.5?</h2>
       ${whyP.length > 1 ? card({ id: 'why', span: 's12', h: 'h260', title: 'Kenapa fokus pada partikel, dan kenapa PM2.5?',
         sub: `Kiri: persen hari-stasiun yang melewati ${term('baku 24 jam', 'baku harian')} untuk enam polutan (CO dan O₃ memakai baku 8 jam). Kanan: PM10 terhadap PM2.5 per hari.`,
@@ -527,6 +550,23 @@ PAGES.t1 = {
       }
       { const key = [S.from, S.to, [].concat(S.pulau || []).join(), [].concat(S.kel || []).join()].join('|'); if (window.__whyKey === key) opt.animation = false; window.__whyKey = key; }  // ganti polutan: kartu ini tidak ikut beranimasi ulang
       mk('why', opt); }
+    // tren bulanan, tahunan, baku
+    { const T = this._tr || {};
+      const ml = [P.thn ? refLine(P.thn, 'baku tahunan ' + P.thn, { tip: 'Baku mutu tahunan PP 22/2021. Rata-rata setahun di atas garis ini berarti melewati baku.' }) : null,
+        S.pol === 'pm25' ? refLine(5, 'pedoman WHO 5', { pos: 'insideEndBottom', tip: 'Pedoman WHO 2021: rata-rata setahun yang dianggap aman.' }) : null].filter(Boolean);
+      mk('tren', { grid: { left: 8, right: 18, top: 24, bottom: 8, containLabel: true }, tooltip: { trigger: 'axis', formatter: ps => `<b>${fm(S.from + ps[0].dataIndex)}</b><br>${f(ps[0].value, dg)} µg/m³` },
+        xAxis: ax({ type: 'category', data: (T.mSer || []).map((v, i) => fm(S.from + i)), boundaryGap: false, axisLabel: { color: cv('--muted'), fontSize: 10.5, hideOverlap: true } }), yAxis: ax({ type: 'value', min: 0 }),
+        series: [{ type: 'line', smooth: .2, showSymbol: false, lineStyle: { width: 2.4, color: cv('--brand') }, itemStyle: { color: cv('--brand') }, areaStyle: { opacity: .08, color: cv('--brand') }, data: T.mSer || [], markLine: ml.length ? mlRef(ml) : undefined }] });
+      mk('thn', { grid: { left: 8, right: 12, top: 26, bottom: 8, containLabel: true }, tooltip: { trigger: 'item', formatter: p => `<b>${esc(p.name)}</b><br>${f(p.value, dg)} µg/m³` },
+        xAxis: ax({ type: 'category', data: (T.ySer || []).map(x => x.y + (x.part ? '*' : '')), splitLine: { show: false } }), yAxis: ax({ type: 'value', min: 0 }),
+        series: [{ type: 'bar', barWidth: '46%', data: (T.ySer || []).map(x => ({ value: x.v, itemStyle: { color: cv('--brand'), borderRadius: [4, 4, 0, 0], opacity: x.part ? .6 : 1 } })), label: { show: true, position: 'top', color: cv('--ink-2'), fontSize: 11, formatter: p => f(p.value, dg) } }] });
+      if (T.nWho != null || T.nThn != null) {
+        const rowsB = [T.nWho != null ? ['Pedoman WHO · 5', T.nWho] : null, T.nThn != null ? ['Baku tahunan · ' + P.thn, T.nThn] : null].filter(Boolean);
+        mk('bk', { grid: { left: 8, right: 16, top: 8, bottom: 34, containLabel: true }, tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, formatter: ps => `<b>${esc(ps[0].name)}</b><br>` + ps.map(p => `${p.marker}${p.seriesName}: <b>${p.value}</b> stasiun`).join('<br>') },
+          legend: { show: true, bottom: 0, textStyle: { color: cv('--ink-2'), fontSize: 11 } },
+          xAxis: ax({ type: 'value', max: T.nSt }), yAxis: ax({ type: 'category', data: rowsB.map(r => r[0]), inverse: true, splitLine: { show: false } }),
+          series: [{ name: 'Memenuhi', type: 'bar', stack: 'b', barWidth: '44%', data: rowsB.map(r => T.nSt - r[1]), itemStyle: { color: cv('--ok') }, label: { show: true, color: '#fff', fontSize: 11, formatter: p => p.value ? p.value : '' } },
+            { name: 'Melewati', type: 'bar', stack: 'b', data: rowsB.map(r => r[1]), itemStyle: { color: cv('--div-bad') }, label: { show: true, color: '#fff', fontSize: 11, formatter: p => p.value ? p.value : '' } }] }); } }
     // ISPU stacked
     const sr = stRows(d.codes).filter(r => r.n).map(r => ({ ...r, sh: r.cats.map(v => 100 * v / r.n) })).sort((a, b) => (b.sh[2] + b.sh[3] + b.sh[4]) - (a.sh[2] + a.sh[3] + a.sh[4]) || (b.sh[1] - a.sh[1]) || a.code.localeCompare(b.code));
     mk('ispu', { grid: { left: 8, right: 10, top: 10, bottom: 8, containLabel: true }, tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, formatter: ps => `<b>${ps[0].name}</b> ${esc(BY[ps[0].name].kota)}<br>` + ps.map(p => `${p.marker}${p.seriesName}: <b>${f(p.value)}%</b>`).join('<br>') },
