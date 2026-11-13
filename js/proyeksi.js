@@ -68,7 +68,7 @@ PAGES.proyeksi = {
     const hh = h => String(h).padStart(2, '0') + ':00';
     const cityOpts = [['all', 'Rata-rata 6 kota']].concat(SG_CL.map(c => [c, SG_PROV[c]]));
     return ph({ k: 'Analisis lanjutan · Proyeksi', h: 'Musim asap 2026 belum usai: apa yang masih akan datang?',
-      lede: `Data berhenti di tengah lonjakan terparah, sehingga halaman ini memproyeksikan sisa musim dengan pola tahun-tahun sebelumnya. <span class="muted-s">Filter di atas tidak memengaruhi halaman ini.</span>` }) +
+      lede: `Memproyeksikan sisa musim asap setelah data berhenti, dan jam aman beraktivitas di luar rumah. <span class="muted-s">Filter di atas tidak memengaruhi halaman ini.</span>` }) +
       `<div class="kpis k4">${[
         kpi({ l: 'Musim makin parah', ic: 'fire', v: f(Y[2026].pm, 0), u: 'µg/m³', c: `rata-rata PM2.5 enam kota sabuk asap, 1 Agu–14 Okt · 2024 ${f(Y[2024].pm, 0)} → 2025 ${f(Y[2025].pm, 0)} (+${f(100 * g1, 0)}%) → 2026 (+${f(100 * g2, 0)}%)`, color: cv('--ispu-4'), go: '#/proyeksi?sec=musim',
           info: { rumus: 'Rata-rata harian PM2.5 keenam stasiun sabuk asap (stasiun tanpa data hari itu dilewati), lalu dirata-rata 1 Agu–14 Okt tiap tahun.', data: 'pm25 harian KTB-01, PKU-01, JMB-01, BTM-01, STG-01, PKN-01', filter: false } }),

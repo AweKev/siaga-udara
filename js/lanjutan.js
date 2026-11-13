@@ -9,14 +9,8 @@ const ljQ25 = a => { const s = a.filter(v => v != null).sort((x, y) => x - y); r
 const ljUse = () => ST.filter(s => s.use !== 'rusak');
 
 /* penutup tiap halaman lanjutan: tabel tindakan (siapa · apa · kapan), batasan, tombol ke halaman berikutnya */
-function ljTutup(page, temuan, rows, lim) {
-  const nx = 'rekomendasi', nl = 'Rekomendasi';   // semua penutup mengarah ke Rekomendasi
-  return card({ id: 'ljt', span: 's12', title: 'Jadi, apa yang harus dilakukan?',
-    body: `<div class="jwb lj"><div class="jw jw-t"><span class="jk">Temuan</span><p>${temuan}</p></div><div class="jw jw-a"><span class="jk">Tindakan</span>
-      <table class="t lj-t"><thead><tr><th>Siapa</th><th>Apa</th><th>Kapan</th></tr></thead><tbody>${rows.map(r => `<tr><td><b>${r[0]}</b></td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join('')}</tbody></table></div></div>
-      <div class="jw-foot"><p class="jw-lim"><b>Perlu diingat:</b> ${lim}</p><a class="btn primary" href="${hashOf(nx)}">Lanjut ke ${nl} ${IC.arrow}</a></div>` });
-}
-const ljKick = (n, t) => `Analisis lanjutan ${n} dari ${LANJUT.length} · ${t}`;
+function ljTutup() { return ''; }   // kartu "Jadi, apa yang harus dilakukan?" dihapus; tindakan ada di halaman Aksi pemerintah
+const ljKick = (n, t) => `Langkah ${n} · ${t}`;
 
 /* ---------- sabuk asap = stasiun yang PM2.5 Agu–Okt ≥ 2× bulan lain (ditentukan data, bukan daftar tetap) */
 let LJS = null;
@@ -56,21 +50,21 @@ PAGES.ambang = {
     const A = ljAmbang(), o = this._o || 'resp', R = A.r[o], rr = A.r.resp, rd = A.r.death;
     const nB = A.nDay[2], top = Object.entries(A.band).sort((a, b) => b[1] - a[1]).slice(0, 3);
     const pc = v => fp(100 * (v - 1));
+    const fu = R.findIndex((v, i) => i > 0 && v != null && v >= 1.1);   // pita pertama dengan kasus naik jelas (>= 1,1 kali)
+    const ambLead = fu < 0 ? `${LJ_OUT[o]} tidak naik jelas pada kadar PM2.5 mana pun yang diuji.` : fu <= 2 ? `${LJ_OUT[o]} sudah naik jelas di pita <b>${LJ_BIN[fu][1]} µg/m³</b>, sebelum baku harian terlampaui.` : `${LJ_OUT[o]} baru naik jelas di pita <b>${LJ_BIN[fu][1]} µg/m³</b>, setelah baku harian terlampaui.`;
     return ph({ k: ljKick(1, 'Kapan harus bertindak'), h: 'Kapan peringatan harus dimulai?',
-      lede: `Kasus pernapasan di RS rujukan sudah naik pada hari yang masih lolos ${term('baku 24 jam', 'baku harian 55')}, jadi peringatan sebaiknya dimulai lebih awal.`,
+      lede: 'Mencari kadar PM2.5 saat kasus pernapasan mulai naik untuk menentukan kapan peringatan dimulai.',
       scope: 'Seluruh periode Jan 2024–14 Okt 2026 · 25 stasiun andal/parsial dengan RS pasangannya · filter global tidak berlaku' }) +
       `<div class="grid">
       <h2 class="t-sec">Di kadar berapa RS mulai terasa?</h2>
-      ${card({ id: 'amb', span: 's8', h: 'h380', title: 'Seberapa banyak kasus naik saat PM2.5 naik?', sub: `Batang = kasus RS dibanding rata-rata RS itu sendiri pada 25% hari terbersihnya (1,0 = kondisi biasa, garis titik hitam), menurut kadar PM2.5 hari itu. Warna batang = kategori ${term('ISPU')}.`,
+      <p class="sec-note">Angka 1,0 berarti kasus sama dengan hari biasa, 2,0 berarti dua kali lipat. Bagian ini menghubungkan kondisi udara dengan kapan peringatan perlu dikeluarkan.</p>
+      ${card({ id: 'amb', span: 's12', h: 'h380', title: 'Seberapa banyak kasus naik saat PM2.5 naik?', sub: `Batang = kasus RS dibanding rata-rata RS itu sendiri pada 25% hari terbersihnya (1,0 = kondisi biasa, garis titik hitam), menurut kadar PM2.5 hari itu. Warna batang = kategori ${term('ISPU')}.`,
         ctrl: seg('ambo', Object.entries(LJ_OUT).map(([k, l]) => [k, l]), o),
-        lead: `Kasus RS mulai naik jelas di pita <b>${LJ_BIN[2][1]} µg/m³</b>${R[2] != null ? ` (${f(R[2], 2)} kali hari biasa)` : ''}, sebelum baku harian terlampaui. Artinya hari yang masih dianggap aman menurut baku sudah berdampak ke pasien.`, note: nt(`${LJ_OUT[o]}: ${LJ_BIN.map((b, i) => R[i] != null ? `${b[1]} → <b>${f(R[i], 2)}×</b>` : '').filter(Boolean).join(' · ')}. Kenaikan pertama yang jelas muncul di pita 35–55, sebelum baku harian terlampaui.`,
+        lead: ambLead, note: nt(`${LJ_OUT[o]}: ${LJ_BIN.map((b, i) => R[i] != null ? `${b[1]} → <b>${f(R[i], 2)}×</b>` : '').filter(Boolean).join(' · ')}. ${ambLead}`,
           'Hubungan pada data panitia, bukan sebab-akibat. Hari 35–55 lebih sering jatuh di musim kemarau, jadi sebagian kenaikan bisa ikut dipengaruhi musim.'),
         table: () => ({ cols: [{ k: 'b', l: 'PM2.5 harian (µg/m³)' }, { k: 'n', l: 'Hari-stasiun', num: 1, fmt: fi }].concat(Object.entries(LJ_OUT).map(([k, l]) => ({ k, l: l + ' (×)', num: 1, fmt: v => f(v, 2) }))),
           rows: LJ_BIN.map((b, i) => Object.assign({ b: b[1], n: A.nDay[i] }, Object.fromEntries(Object.keys(LJ_OUT).map(k => [k, A.r[k][i]])))) }),
         info: { rumus: 'Per RS: rasio = kasus hari itu ÷ rata-rata kasus pada hari PM2.5 stasiun pasangannya ≤ persentil-25. Rasio dirata-rata per pita PM2.5 untuk semua RS.', data: 'pm25 harian + HLT-01, RS dipasangkan dengan stasiun bernomor sama', filter: false } })}
-      ${card({ id: 'ambn', span: 's4', h: 'h380', title: 'Apakah hari "aman" sudah berdampak?', sub: 'Batang = jumlah hari per stasiun dengan PM2.5 35–55 µg/m³.',
-        note: nt(`Hari seperti ini paling banyak ada di <b>${top.map(([c, n]) => `${stShort(c)} (${fi(n)} hari)`).join(', ')}</b>.`, 'Hari sah saja (≥ 18 jam data).'),
-        info: { rumus: 'Jumlah hari sah dengan rata-rata PM2.5 > 35 dan ≤ 55 µg/m³.', data: 'pm25 harian', filter: false } })}
       ${ljTutup('ambang', `Kasus pernapasan naik <b>${pc(rr[2])}</b> dan kematian <b>${pc(rd[2])}</b> pada hari 35–55 µg/m³; pada 55–100 naik <b>${pc(rr[3])}</b>, dan di atas 250 kematian mencapai <b>${f(rd[6], 1)}×</b> hari biasa.`,
         [['Dinas Kesehatan provinsi', 'Kirim peringatan khusus balita, lansia, dan penderita asma/PPOK saat PM2.5 harian > 35 µg/m³', 'Setiap hari, mulai sekarang'],
          ['Sekolah dan Dinas Pendidikan', 'Beri tahu guru dan orang tua lewat sekolah saat PM2.5 hari itu > 35 µg/m³, lalu batasi aktivitas luar ruang siswa yang rentan, misalnya penderita asma', 'Hari yang sama'],
@@ -86,11 +80,6 @@ PAGES.ambang = {
       series: [{ type: 'bar', barWidth: '58%', data: R.map((v, i) => ({ value: v, itemStyle: { color: cv(LJ_BIN[i][2]), borderRadius: [4, 4, 0, 0] } })),
         markLine: mlRef([refLine(1, 'hari biasa = 1,0', { tip: 'Pembanding: rata-rata kasus RS pada 25% hari terbersih tiap RS dihitung 1,0. Batang di atas garis berarti kasus lebih banyak dari hari biasa; angka 1,17 berarti 17% lebih banyak.' })]),
         markArea: { silent: true, itemStyle: { color: cv('--ispu-3'), opacity: .08 }, label: { show: true, formatter: 'lolos baku, sudah naik', color: cv('--ink-2'), fontSize: 10.5, position: 'insideTop' }, data: [[{ xAxis: '35–55' }, { xAxis: '35–55' }]] } }] });
-    const b = Object.entries(A.band).sort((x, y) => x[1] - y[1]).slice(-12);
-    mk('ambn', { grid: { left: 8, right: 30, top: 6, bottom: 8, containLabel: true }, tooltip: { formatter: p => `<b>${b[p.dataIndex][0]}</b> ${esc(BY[b[p.dataIndex][0]].kota)}<br>${fi(p.value)} hari 35–55 µg/m³<br><span style="color:var(--muted)">Klik untuk buka profil stasiun</span>` },
-      xAxis: ax({ type: 'value' }), yAxis: ax({ type: 'category', data: b.map(x => stShort(x[0])), splitLine: { show: false }, axisLabel: { color: cv('--ink-2'), fontSize: 10.5, interval: 0 } }),
-      series: [{ type: 'bar', barWidth: '60%', cursor: 'pointer', data: b.map(x => ({ value: x[1], itemStyle: { color: cv('--ispu-2'), borderRadius: [0, 4, 4, 0] } })) }] },
-      p => { if (p.dataIndex == null) return; window.BACK_X = { p: 'stasiun', h: hashOf('ambang'), label: 'Ambang nyata', id: 'card-ambn' }; go('stasiun', { st: b[p.dataIndex][0] }); });
   },
 };
 
@@ -157,13 +146,13 @@ PAGES.kalender = {
     const e0 = early[0];
     this._t = { stable, early };
     return ph({ k: ljKick(2, 'Kapan harus bersiap'), h: 'Kapan musim asap mulai?',
-      lede: `Musim asap datang pada pekan yang hampir sama setiap tahun, jadi persiapan bisa dimulai sebelum asap datang.`,
+      lede: 'Melacak kapan musim asap mulai dan berakhir di tiap stasiun setiap tahun.',
       scope: `Awal musim = hari pertama sejak 1 Juni dengan rata-rata 7 hari > ${BAKU} µg/m³ · hanya stasiun yang bersih Jan–Mei (kronis tidak dihitung) · filter global tidak berlaku` }) +
       `<div class="grid">
       <h2 class="t-sec">Kapan musim asap mulai?</h2>
       ${card({ id: 'kal', span: 's12', title: 'Kapan musim asap mulai di tiap stasiun?', sub: `Pilih satu stasiun untuk melihat kalender penuhnya. Tanggal mulai = hari pertama rata-rata 7 hari PM2.5 di atas ${BAKU} µg/m³.`,
         body: ljKalBody(this, rows, K),
-                lead: (() => { const a = dTxt(on26[Math.floor(on26.length * .25)]), b = dTxt(on26[Math.ceil(on26.length * .75) - 1]); return `Awal musim asap 2026 umumnya jatuh sekitar <b>${a === b ? a : a + '–' + b}</b>, pekan yang sama dengan 2024 dan 2025. Musim 2024 dan 2025 sama-sama berakhir awal November, jadi waktu mulainya bisa dijadikan patokan kesiapan.`; })(), note: nt(`Di ${stable.length} stasiun yang stabil, awal musim 2026 umumnya jatuh pada <b>${dTxt(on26[Math.floor(on26.length * .25)])}–${dTxt(on26[Math.ceil(on26.length * .75) - 1])}</b>, pekan yang sama dengan 2024 dan 2025; musim 2024 dan 2025 berakhir awal November.${early.length ? ` Yang maju lebih dari 3 minggu: <b>${early.map(r => `${esc(stShort(r.c))} (${-r.shift} hari)`).join(', ')}</b>.` : ''}`,
+                lead: (() => { const a = dTxt(on26[Math.floor(on26.length * .25)]), b = dTxt(on26[Math.ceil(on26.length * .75) - 1]); return `Awal musim asap 2026 umumnya jatuh sekitar <b>${a === b ? a : a + '–' + b}</b>, pekan yang sama dengan 2024 dan 2025.`; })(), note: nt(`Di ${stable.length} stasiun yang stabil, awal musim 2026 umumnya jatuh pada <b>${dTxt(on26[Math.floor(on26.length * .25)])}–${dTxt(on26[Math.ceil(on26.length * .75) - 1])}</b>, pekan yang sama dengan 2024 dan 2025; musim 2024 dan 2025 berakhir awal November.${early.length ? ` Yang maju lebih dari 3 minggu: <b>${early.map(r => `${esc(stShort(r.c))} (${-r.shift} hari)`).join(', ')}</b>.` : ''}`,
           `Tanpa data curah hujan atau titik api; tanggal dihitung dari PM2.5 saja. Stasiun bertanda * berdata parsial, jadi tanggal akhirnya bisa terpotong oleh data hilang.`),
         table: () => ({ cols: [{ k: 'c', l: 'Stasiun' }, { k: 'k', l: 'Kota' }].concat([2024, 2025, 2026].map(y => ({ k: 'y' + y, l: String(y) }))).concat([{ k: 'sh', l: 'Geser 2024→2026 (hari)', num: 1, fmt: v => v == null ? '–' : (v > 0 ? '+' : '') + v }]),
           rows: rows.map(r => Object.assign({ _st: r.c, c: r.c, k: BY[r.c].kota, sh: r.shift }, Object.fromEntries([2024, 2025, 2026].map(y => [ 'y' + y, r.yrs[y] ? `${ljD(r.yrs[y].on)} – ${r.yrs[y].open ? 'berlanjut' : ljD(r.yrs[y].off)}` : '–' ])))) }),
@@ -212,25 +201,25 @@ PAGES.rs = {
     if (!this._c) this._c = top.c;
     const cur = rs.find(r => r.c === this._c) || top, ov = rs.filter(r => r.over > 0).sort((a, b) => b.over - a.over);
     const vk = Object.keys(R.vS).filter(k => k !== 'resp').sort((a, b) => R.vS[b] - R.vS[a]);
-    return ph({ k: ljKick(3, 'Apa yang kewalahan'), h: 'Seberapa parah beban RS?',
-      lede: `Sejak awal Agustus, pasien pernapasan di sejumlah RS rujukan melonjak jauh di atas hari biasa, dan kematian ikut melampaui rata-rata sebelum musim asap.`,
+    return ph({ k: ljKick(4, 'Apa yang kewalahan'), h: 'Seberapa parah beban RS?',
+      lede: 'Membandingkan beban pasien pernapasan dan kematian di rumah sakit rujukan saat musim asap dengan kondisi normal.',
       scope: '1 Agu–14 Okt 2026 dibanding rata-rata Jan–Mei 2026 tiap RS · data RS apa adanya, tanpa model · filter global tidak berlaku' }) +
       `<div class="grid">
       <h2 class="t-sec">Seberapa penuh?</h2>
       ${card({ id: 'rsd', span: 's8', h: 'h400', title: `Kapan pasien melonjak di ${esc(cur.nama)}?`, sub: `Garis = pasien baru per hari, Juni–14 Oktober 2026. Garis titik hitam = kapasitas tempat tidur dan "hari biasa" (rata-rata Januari–Mei RS ini).`,
         ctrl: `<span class="ctrl"><span>RS</span><select class="sel" id="rsSel" aria-label="Pilih RS">${byX.map(r => `<option value="${r.c}" ${r.c === cur.c ? 'selected' : ''}>${esc(r.nama)} (${esc(stShort(r.c))})</option>`).join('')}</select></span>`,
-        lead: `Pasien melonjak sampai <b>${fi(cur.pk)}</b> orang sehari, ${f(cur.x, 1)} kali hari biasa.${cur.over ? ` Pada <b>${cur.over}</b> hari, pasien baru dalam sehari melebihi seluruh tempat tidur RS.` : ''}`, note: nt(`Puncak <b>${fi(cur.pk)}</b> pasien pada ${ljMD(cur.pki)}, <b>${f(cur.x, 1)}×</b> hari biasa (${f(cur.br, 1)}).${cur.tt ? ` Kapasitas ${fi(cur.tt)} tempat tidur${cur.over ? `; pasien baru sehari melebihi seluruh tempat tidur pada <b>${cur.over}</b> hari` : ''}.` : ''}`,
+        lead: `Pasien melonjak sampai <b>${fi(cur.pk)}</b> orang sehari, ${f(cur.x, 1)} kali hari biasa.`, note: nt(`Puncak <b>${fi(cur.pk)}</b> pasien pada ${ljMD(cur.pki)}, <b>${f(cur.x, 1)}×</b> hari biasa (${f(cur.br, 1)}).${cur.tt ? ` Kapasitas ${fi(cur.tt)} tempat tidur${cur.over ? `; pasien baru sehari melebihi seluruh tempat tidur pada <b>${cur.over}</b> hari` : ''}.` : ''}`,
           'Pasien baru per hari, bukan jumlah pasien yang sedang dirawat; lama rawat tidak ada di data.'),
         info: { rumus: 'Kolom resp (rawat pernapasan umum) per hari, RS dipasangkan dengan stasiun bernomor sama. Kapasitas = kapasitas_tempat_tidur di hospitals.csv.', data: 'HLT-01 + hospitals.csv', filter: false } })}
       ${card({ id: 'rsx', span: 's4', h: 'h400', title: 'RS mana kematiannya paling di atas normal?', sub: 'Batang = kematian per hari 1 Agu–14 Okt 2026 dibanding rata-rata Jan–Mei 2026 RS itu, untuk 10 RS teratas.',
-        note: nt(`${kt.map(r => `<b>${esc(stShort(r.c))}</b> (${fi(r.ex)})`).join(' dan ')} menyumbang ${f(100 * sum(kt.map(r => r.ex)) / R.tot, 0)}% dari seluruh kelebihan kematian.`, 'Deskriptif: selisih dengan rata-rata awal tahun, tidak memisahkan penyebab.'),
+        note: nt(`${kt.map(r => `<b>${esc(stShort(r.c))}</b>`).join(' dan ')} menyumbang ${f(100 * sum(kt.map(r => r.ex)) / R.tot, 0)}% dari seluruh kelebihan kematian.`, 'Deskriptif: selisih dengan rata-rata awal tahun, tidak memisahkan penyebab.'),
         table: () => ({ cols: [{ k: 'nama', l: 'RS' }, { k: 'c', l: 'Stasiun' }, { k: 'bd', l: 'Normal/hari', num: 1, fmt: v => f(v, 1) }, { k: 'ex', l: 'Di atas normal', num: 1, fmt: fi }, { k: 'pk', l: 'Puncak pasien/hari', num: 1, fmt: fi }, { k: 'tt', l: 'TT', num: 1, fmt: fi }, { k: 'over', l: 'Hari > TT', num: 1, fmt: fi }],
           rows: rs.slice().sort((a, b) => b.ex - a.ex).map(r => Object.assign({ _st: r.c }, r)) }),
         info: { rumus: 'Σ (kematian harian − rata-rata kematian harian 1 Jan–31 Mei 2026), 1 Agu–14 Okt 2026, per RS.', data: 'HLT-01', filter: false } })}
       <h2 class="t-sec">Siapa yang paling tertekan?</h2>
       ${card({ id: 'rsv', span: 's12', h: 'h320', title: 'Seberapa parah asap 2026 vs 2024?', sub: `Batang = kenaikan kasus 1 Agu–14 Okt dibanding musim yang sama 2024. Sabuk asap = ${R.sab.length} stasiun yang PM2.5 Agu–Okt-nya ≥ 2× bulan lain, sisanya pembanding.`,
         legend: `<span><i style="background:var(--k-gambut)"></i>RS sabuk asap</span><span><i style="background:var(--line-2)"></i>RS lain</span>`,
-        lead: `Di sabuk asap kasus naik paling banyak di <b>${ljL(vk[0])}</b> (${fp(R.vS[vk[0]])}), sedangkan RS di luar sabuk asap paling banyak naik ${fp(Math.max(...vk.map(k => R.vL[k])))}.`, note: nt(`Di sabuk asap, kenaikan terbesar: ${vk.slice(0, 3).map(k => `<b>${ljL(k)} ${fp(R.vS[k])}</b>`).join(', ')}; terkecil ${ljL(vk[vk.length - 1])} ${fp(R.vS[vk[vk.length - 1]])}. RS lain hanya ${fp(Math.min(...vk.map(k => R.vL[k])))} sampai ${fp(Math.max(...vk.map(k => R.vL[k])))}.`,
+        lead: `Di sabuk asap kasus naik paling banyak di <b>${ljL(vk[0])}</b> (${fp(R.vS[vk[0]])}), jauh di atas RS di luar sabuk.`, note: nt(`Di sabuk asap, kenaikan terbesar: ${vk.slice(0, 3).map(k => `<b>${ljL(k)} ${fp(R.vS[k])}</b>`).join(', ')}; terkecil ${ljL(vk[vk.length - 1])} ${fp(R.vS[vk[vk.length - 1]])}. RS lain hanya ${fp(Math.min(...vk.map(k => R.vL[k])))} sampai ${fp(Math.max(...vk.map(k => R.vL[k])))}.`,
           'Jumlah kasus, bukan angka per penduduk; data populasi tidak tersedia.'),
         info: { rumus: '(Σ kasus 1 Agu–14 Okt 2026 ÷ Σ kasus 1 Agu–14 Okt 2024 − 1) × 100, dijumlah untuk semua RS dalam kelompok.', data: 'HLT-01', filter: false } })}
       ${ljTutup('rs', `${fi(R.tot)} kematian di atas normal dalam 75 hari; ${f(100 * sum(kt.map(r => r.ex)) / R.tot, 0)}% di dua RS Kalteng. ${ov.length ? `${ov.length} RS menerima pasien pernapasan baru melebihi seluruh tempat tidurnya dalam sehari (terbanyak ${esc(stShort(ov[0].c))}, ${ov[0].over} hari).` : ''} Kelompok yang naik paling tajam: ${vk.slice(0, 2).map(k => ljL(k)).join(' dan ')}.`,
@@ -278,7 +267,7 @@ PAGES.beban = {
     const B = ljBeban(), r = B.rows, kr = r.filter(x => x.b > x.a).slice(0, 3), mu = r.filter(x => x.a > 2 * x.b).slice(0, 3);
     const k0 = kr[0], m0 = mu[0];
     return ph({ k: ljKick(4, 'Siapa yang terlupakan'), h: 'Beban polusi: kronis vs musiman',
-      lede: `Bila kelebihan PM2.5 dijumlah, kota yang buruk sepanjang tahun menanggung beban sebesar kota musiman, tetapi tidak pernah memicu status darurat.`,
+      lede: 'Menjumlahkan kelebihan PM2.5 di atas baku tahunan untuk membandingkan kota kronis dan kota musiman.',
       scope: 'Seluruh periode Jan 2024–14 Okt 2026 · hari sah · filter global tidak berlaku' }) +
       `<div class="grid">
       <h2 class="t-sec">Siapa menanggung paling banyak?</h2>

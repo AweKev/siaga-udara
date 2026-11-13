@@ -106,7 +106,7 @@ PAGES.papan = {
     this._d = { A, B, mA, mB, kA, kB, iA, iB, xA, xB };
     const perSeg = seg('pp_p', Object.entries(PP_PER).map(([k, v]) => [k, v.l]), this._p);
     const ctrl = `<span class="ctrl"><span>Wilayah A</span>${stSelect('cmpA', this._a, list)}</span><span class="ctrl"><span>Wilayah B</span>${stSelect('cmpB', this._b, list)}</span>${perSeg}<button type="button" class="btn sm" id="cmpCsv">${IC.dl} Unduh CSV</button>`;
-    const head = ph({ k: 'Data', h: 'Perbandingan wilayah', lede: 'Pilih dua wilayah (stasiun dan RS rujukannya) untuk membandingkan udara dan kasus RS-nya lewat grafik, dengan data yang bisa diunduh sebagai CSV.' });
+    const head = ph({ k: 'Data', h: 'Perbandingan wilayah', lede: 'Menyandingkan dua wilayah beserta rumah sakit rujukannya lewat grafik, dengan data yang bisa diunduh sebagai CSV.' });
     const lim = 'Hubungan yang tercatat pada data sintetis, bukan bukti sebab-akibat. Jumlah pasien ikut dipengaruhi ukuran RS dan jumlah penduduk, yang tidak ada di data.';
     const closeCard = `${card({ id: 'ppno', span: 's12', title: 'Apa yang tidak bisa dijawab data ini?', body: `<ul class="lim">
           <li>Sumber atau penyebab pencemaran dan kebakaran.</li>

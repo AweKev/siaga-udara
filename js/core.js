@@ -79,7 +79,8 @@ const S = { page: 'overview', ...structuredClone(DEF) };
 function readHash() {
   const h = location.hash.replace(/^#\/?/, '');
   const [p, q] = h.split('?');
-  const pg = p === 'ringkasan' ? 'overview' : (p === '' ? 'mulai' : p);
+  let pg = p === 'ringkasan' ? 'overview' : p === 'analisis' ? 't1' : (p === '' ? 'mulai' : p);
+  if (window.AN_PAGE && window.AN_PAGE[pg]) { window.SEC = pg; window.SCROLL_TO = window.SCROLL_TO || 'sec-' + pg; pg = window.AN_PAGE[pg]; } else window.SEC = null;   // langkah/sub-bab alur analisis -> halaman babnya
   S.page = PAGES[pg] ? pg : 'overview';
   Object.assign(S, structuredClone(DEF));
   new URLSearchParams(q || '').forEach((v, k) => {
@@ -394,9 +395,8 @@ function renderNav() {
   const a = (id, inner) => `<a href="${hashOf(id)}" class="${S.page === id ? 'on' : ''}" ${S.page === id ? 'aria-current="page"' : ''}>${inner}</a>`;
   document.getElementById('nav').innerHTML =
     a('overview', `${NAVI.home}Overview`) +
-    '<h6>Alur analisis</h6>' + STEPS.map((id, i) => a(id, `<span class="step">${i + 1}</span>${PAGES[id].nav}`)).join('') +
-    '<h6>Analisis lanjutan</h6>' + (typeof LANJUT !== 'undefined' ? LANJUT.map(id => a(id, `${IC[LJ_NAV[id][0]] || ''}${LJ_NAV[id][1]}`)).join('') : '') +
-    '<h6>Tindak lanjut</h6>' + a('rekomendasi', `${NAVI.rec}Rekomendasi`) +
+    '<h6>Alur analisis</h6>' + (window.AN_CH ? window.AN_CH.map(([m, s], i) => `<a href="${hashOf(m)}" class="an-ch${S.page === AN_PAGE[m] ? ' on' : ''}" data-sec="${m}"><span class="step">${i + 1}</span>${AN_LABEL[m]}</a>`).join('') : '') +
+    '<h6>Tindak lanjut</h6>' + a('rekomendasi', `${NAVI.rec}Aksi pemerintah`) + a('t5', `${IC.pin}Jaringan pemantau`) +
     '<h6>Data</h6>' + a('stasiun', `${NAVI.pin}Profil stasiun`) + (PAGES.papan ? a('papan', `${IC.table}Perbandingan wilayah`) : '') + a('metodologi', `${NAVI.db}Metodologi &amp; kualitas<span class="count" title="Stasiun berdata parsial/rusak">${nRusak}</span>`);
 }
 function stepper() {
@@ -413,12 +413,7 @@ function ph(o) {
 /* paragraf temuan di bawah grafik + baris batasan (opsional) */
 const nt = (t, lim) => `${t}${lim ? `<span class="lim"><b>Batasan.</b> ${lim}</span>` : ''}`;
 /* kartu penutup tiap langkah: temuan dan artinya berdampingan, catatan batasan kecil di bawah, lalu tombol ke langkah berikutnya */
-function jawab(n, a, arti, lim) {
-  const nx = 'rekomendasi', nl = 'Rekomendasi';   // semua penutup mengarah ke Rekomendasi
-  const it = (c, k, t) => `<div class="jw ${c}"><span class="jk">${k}</span><p>${t}</p></div>`;
-  return card({ id: 'jwb', span: 's12', title: 'Jadi, apa yang didapat?',
-    body: `<div class="jwb">${it('jw-t', 'Temuan', a)}${it('jw-a', 'Artinya', arti)}</div><div class="jw-foot"><p class="jw-lim"><b>Perlu diingat:</b> ${lim}</p><a class="btn primary" href="${hashOf(nx)}">Lanjut ke ${nl} ${IC.arrow}</a></div>` });
-}
+function jawab() { return ''; }   // kartu "Jadi, apa yang didapat?" dihapus dari semua halaman
 /* hero besar ala aplikasi cuaca: o {k, h, lede, l, v, u, val (untuk kategori ISPU), note, stats:[[ikon, label, nilai]], go} */
 function hero(o) {
   const c = ispuOf(o.val), col = cv(c.v);
@@ -487,11 +482,11 @@ function render(scrollTop = true) {
   const C = document.getElementById('content');
   // tombol kembali ke Ringkasan: muncul bila halaman dibuka dari Ringkasan, bertahan selama masih di halaman itu
   if (S.page === 'overview' || S.page === 'stasiun') window.BACK_OV = false; else if (lastPage === 'overview') window.BACK_OV = true; else if (lastPage !== S.page) window.BACK_OV = false;
-  const backOv = window.BACK_OV ? `<div class="backbar only-m"><a class="btn primary" href="${hashOf('overview')}" onclick="window.SCROLL_TO=${/^t[1-5]$/.test(S.page) ? `'ov-${S.page}'` : 'null'}">← Kembali ke Ringkasan</a></div>` : '';
-  if (window.REC_FROM && window.REC_FROM.p !== S.page) window.REC_FROM = null;
+  const backOv = window.BACK_OV ? `<div class="backbar only-m"><a class="btn primary" href="${hashOf('overview')}" onclick="window.SCROLL_TO=${/^t[1-5]$/.test(window.SEC || S.page) ? `'ov-${window.SEC || S.page}'` : 'null'}">← Kembali ke Ringkasan</a></div>` : '';
+  if (window.REC_FROM && window.REC_FROM.p !== (window.SEC || S.page)) window.REC_FROM = null;
   if (window.BACK_X && window.BACK_X.p !== S.page) window.BACK_X = null;
   const bx = window.BACK_X, bxBtn = cls => bx ? `<a class="btn primary ${cls}" href="${bx.h}" onclick="window.SCROLL_TO='${bx.id}'">← Kembali ke ${bx.label}</a>` : '';
-  const backRec = window.REC_FROM ? `<div class="backbar only-m"><a class="btn primary" href="${window.REC_FROM.h}" onclick="window.SCROLL_TO='rec${window.REC_FROM.n}'">← Kembali ke Rekomendasi #${window.REC_FROM.n}</a></div>` : '';
+  const backRec = window.REC_FROM ? `<div class="backbar only-m"><a class="btn primary" href="${window.REC_FROM.h}" onclick="window.SCROLL_TO='rec${window.REC_FROM.n}'">← Kembali ke Aksi pemerintah #${window.REC_FROM.n}</a></div>` : '';
   C.innerHTML = (bx ? `<div class="backbar only-m">${bxBtn('')}</div>` : '') + backRec + backOv + (P.steps ? stepper() : '') + P.html();
   const fresh = lastPage !== S.page;
   if (fresh) enter(C);
@@ -501,14 +496,14 @@ function render(scrollTop = true) {
   { const F = document.getElementById('filters'); if (F) { F.querySelectorAll('.back-top').forEach(x => x.remove());
       const rf = window.REC_FROM;
       if (bx) F.insertAdjacentHTML('beforeend', bxBtn('back-top'));
-      else if (rf) F.insertAdjacentHTML('beforeend', `<a class="btn primary back-top" href="${rf.h}" onclick="window.SCROLL_TO='rec${rf.n}'">← Kembali ke Rekomendasi #${rf.n}</a>`);
-      else if (window.BACK_OV) F.insertAdjacentHTML('beforeend', `<a class="btn primary back-top" href="${hashOf('overview')}" onclick="window.SCROLL_TO=${/^t[1-5]$/.test(S.page) ? `'ov-${S.page}'` : 'null'}">← Kembali ke Ringkasan</a>`); }
+      else if (rf) F.insertAdjacentHTML('beforeend', `<a class="btn primary back-top" href="${rf.h}" onclick="window.SCROLL_TO='rec${rf.n}'">← Kembali ke Aksi pemerintah #${rf.n}</a>`);
+      else if (window.BACK_OV) F.insertAdjacentHTML('beforeend', `<a class="btn primary back-top" href="${hashOf('overview')}" onclick="window.SCROLL_TO=${/^t[1-5]$/.test(window.SEC || S.page) ? `'ov-${window.SEC || S.page}'` : 'null'}">← Kembali ke Ringkasan</a>`); }
     const ev = window.REC_FROM && window.REC_EVS && window.REC_EVS[window.REC_FROM.n], cd = ev && document.getElementById('card-' + ev.card);
     if (cd && !cd.querySelector('.ev-note')) { cd.classList.add('ev-focus'); const h = cd.querySelector('.card-h'); if (h) h.insertAdjacentHTML('afterend', `<div class="ev-note"><b>Bukti rekomendasi #${window.REC_FROM.n}.</b> ${ev.why}</div>`); } }
   if (fresh) countUp(C);
   if (window.SCROLL_TO) {
     const id = window.SCROLL_TO; window.SCROLL_TO = null;
-    const jump = () => { const el = document.getElementById(id); if (el) el.scrollIntoView({ block: /^ov-/.test(id) ? 'start' : 'center' }); };
+    const jump = () => { const el = document.getElementById(id); if (el) el.scrollIntoView({ block: /^(ov|sec)-/.test(id) ? 'start' : 'center' }); };
     jump(); setTimeout(jump, 120); setTimeout(jump, 450);
   } else if (scrollTop && fresh) { window.scrollTo(0, 0); C.focus({ preventScroll: true }); }
   lastPage = S.page;
