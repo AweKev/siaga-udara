@@ -1182,7 +1182,6 @@ PAGES.rekomendasi = {
       [/^Cegah kebakaran/, 'season', 'Garis gambut setara tipe lokasi lain dari Januari sampai Juli, lalu melonjak pada Agustus–Oktober. Pencegahan perlu berjalan sebelum lonjakan itu.'],
       [/^Kendalikan sumber emisi/, 'ps', 'JKT-02 melewati baku harian hampir setiap hari sepanjang tahun, tanda sumber lokal yang menetap dan bukan musiman.'],
       [/^Siapkan kapasitas RS/, 'rsd', 'Garis pasien baru melewati garis kapasitas tempat tidur pada beberapa hari saat puncak asap 2026, jadi kapasitas perlu siap sebelum puncak.'],
-      [/^Kirim peringatan/, 'amb', 'Batang pita 35–55 µg/m³ sudah di atas garis 1,0: kasus RS naik pada hari itu juga, sebelum baku harian 55 terlampaui.'],
       [/^Lindungi warga umum/, 'ispu', 'Potongan merah bata dan cokelat gelap adalah hari Sangat tidak sehat dan Berbahaya, ketika udara berisiko bagi semua orang.'],
       [/^Perbaiki atau ganti stasiun/, 'net', 'Peta ini menunjukkan provinsi tanpa stasiun serta stasiun yang rusak atau hanya sebagian datanya.'],
       [/^Pasang QC/, 'pq', 'Bulan yang pucat adalah bulan ketika data macet dibuang. BJB-01 macet Sep 2024–Jun 2025 padahal tercatat VALID.'],

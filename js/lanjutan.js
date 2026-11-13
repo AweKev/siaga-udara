@@ -52,19 +52,7 @@ PAGES.ambang = {
     const pc = v => fp(100 * (v - 1));
     const fu = R.findIndex((v, i) => i > 0 && v != null && v >= 1.1);   // pita pertama dengan kasus naik jelas (>= 1,1 kali)
     const ambLead = fu < 0 ? `${LJ_OUT[o]} tidak naik jelas pada kadar PM2.5 mana pun yang diuji.` : fu <= 2 ? `${LJ_OUT[o]} sudah naik jelas di pita <b>${LJ_BIN[fu][1]} µg/m³</b>, sebelum baku harian terlampaui.` : `${LJ_OUT[o]} baru naik jelas di pita <b>${LJ_BIN[fu][1]} µg/m³</b>, setelah baku harian terlampaui.`;
-    return ph({ k: ljKick(1, 'Kapan harus bertindak'), h: 'Kapan peringatan harus dimulai?',
-      lede: 'Mencari kadar PM2.5 saat kasus pernapasan mulai naik untuk menentukan kapan peringatan dimulai.',
-      scope: 'Seluruh periode Jan 2024–14 Okt 2026 · 25 stasiun andal/parsial dengan RS pasangannya · filter global tidak berlaku' }) +
-      `<div class="grid">
-      <h2 class="t-sec">Di kadar berapa RS mulai terasa?</h2>
-      <p class="sec-note">Angka 1,0 berarti kasus sama dengan hari biasa, 2,0 berarti dua kali lipat. Bagian ini menghubungkan kondisi udara dengan kapan peringatan perlu dikeluarkan.</p>
-      ${card({ id: 'amb', span: 's12', h: 'h380', title: 'Seberapa banyak kasus naik saat PM2.5 naik?', sub: `Batang = kasus RS dibanding rata-rata RS itu sendiri pada 25% hari terbersihnya (1,0 = kondisi biasa, garis titik hitam), menurut kadar PM2.5 hari itu. Warna batang = kategori ${term('ISPU')}.`,
-        ctrl: seg('ambo', Object.entries(LJ_OUT).map(([k, l]) => [k, l]), o),
-        lead: ambLead, note: nt(`${LJ_OUT[o]}: ${LJ_BIN.map((b, i) => R[i] != null ? `${b[1]} → <b>${f(R[i], 2)}×</b>` : '').filter(Boolean).join(' · ')}. ${ambLead}`,
-          'Hubungan pada data panitia, bukan sebab-akibat. Hari 35–55 lebih sering jatuh di musim kemarau, jadi sebagian kenaikan bisa ikut dipengaruhi musim.'),
-        table: () => ({ cols: [{ k: 'b', l: 'PM2.5 harian (µg/m³)' }, { k: 'n', l: 'Hari-stasiun', num: 1, fmt: fi }].concat(Object.entries(LJ_OUT).map(([k, l]) => ({ k, l: l + ' (×)', num: 1, fmt: v => f(v, 2) }))),
-          rows: LJ_BIN.map((b, i) => Object.assign({ b: b[1], n: A.nDay[i] }, Object.fromEntries(Object.keys(LJ_OUT).map(k => [k, A.r[k][i]])))) }),
-        info: { rumus: 'Per RS: rasio = kasus hari itu ÷ rata-rata kasus pada hari PM2.5 stasiun pasangannya ≤ persentil-25. Rasio dirata-rata per pita PM2.5 untuk semua RS.', data: 'pm25 harian + HLT-01, RS dipasangkan dengan stasiun bernomor sama', filter: false } })}
+    return `<div class="grid">
       ${ljTutup('ambang', `Kasus pernapasan naik <b>${pc(rr[2])}</b> dan kematian <b>${pc(rd[2])}</b> pada hari 35–55 µg/m³; pada 55–100 naik <b>${pc(rr[3])}</b>, dan di atas 250 kematian mencapai <b>${f(rd[6], 1)}×</b> hari biasa.`,
         [['Dinas Kesehatan provinsi', 'Kirim peringatan khusus balita, lansia, dan penderita asma/PPOK saat PM2.5 harian > 35 µg/m³', 'Setiap hari, mulai sekarang'],
          ['Sekolah dan Dinas Pendidikan', 'Beri tahu guru dan orang tua lewat sekolah saat PM2.5 hari itu > 35 µg/m³, lalu batasi aktivitas luar ruang siswa yang rentan, misalnya penderita asma', 'Hari yang sama'],
@@ -73,13 +61,6 @@ PAGES.ambang = {
       </div>`;
   },
   mount(C) {
-    bindSeg(C, 'ambo', v => { this._o = v; render(false); });
-    const A = ljAmbang(), R = A.r[this._o || 'resp'];
-    mk('amb', { grid: { left: 8, right: 16, top: 26, bottom: 8, containLabel: true }, tooltip: { formatter: p => `PM2.5 <b>${LJ_BIN[p.dataIndex][1]}</b> µg/m³<br>${f(p.value, 2)}× hari biasa<br>${fi(A.nDay[p.dataIndex])} hari-stasiun` },
-      xAxis: ax({ type: 'category', data: LJ_BIN.map(b => b[1]), splitLine: { show: false } }), yAxis: ax({ type: 'value', min: 0 }),
-      series: [{ type: 'bar', barWidth: '58%', data: R.map((v, i) => ({ value: v, itemStyle: { color: cv(LJ_BIN[i][2]), borderRadius: [4, 4, 0, 0] } })),
-        markLine: mlRef([refLine(1, 'hari biasa = 1,0', { tip: 'Pembanding: rata-rata kasus RS pada 25% hari terbersih tiap RS dihitung 1,0. Batang di atas garis berarti kasus lebih banyak dari hari biasa; angka 1,17 berarti 17% lebih banyak.' })]),
-        markArea: { silent: true, itemStyle: { color: cv('--ispu-3'), opacity: .08 }, label: { show: true, formatter: 'lolos baku, sudah naik', color: cv('--ink-2'), fontSize: 10.5, position: 'insideTop' }, data: [[{ xAxis: '35–55' }, { xAxis: '35–55' }]] } }] });
   },
 };
 
