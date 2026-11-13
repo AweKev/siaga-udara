@@ -19,6 +19,9 @@ function makeMap3D(host, o) {
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const K = 20, LON0 = 118, LAT0 = -2.4, PX = (lon, lat) => [(lon - LON0) * K, (lat - LAT0) * K]; // shape-space: y ke utara
   const pv = r => o.pinVal ? o.pinVal(r) : r.mean, maxMean = o.pinMax || Math.max(60, ...o.rows.map(r => pv(r) || 0)), HS = 34 / maxMean, FLAT = 3.2;
+  // tinggi tiang: skala PM2.5 diregangkan (min-maks + pangkat 1,4) agar yang terendah dan tertinggi jelas beda; peta dengan skala tetap (pinMax) tetap linear
+  const pvs = o.rows.map(r => pv(r) || 0), vLo = Math.min(...pvs), vHi = Math.max(...pvs);
+  const pinH = v => o.pinMax || vHi <= vLo ? Math.max(3, v * HS) : 3.5 + 32.5 * Math.pow(Math.min(1, Math.max(0, (v - vLo) / (vHi - vLo))), 1.4);
   const dark = curTheme() === 'dark';
   const surf = new THREE.Color(cv('--surface'));
   const bg = dark ? '#1a2634' : '#e6eaf0', edge = dark ? '#0f1822' : '#ffffff', empty = new THREE.Color(cv('--muted')).lerp(surf, 0.8);
@@ -73,7 +76,7 @@ function makeMap3D(host, o) {
   const pinGeo = new THREE.CylinderGeometry(2.6, 2.6, 1, 20); pinGeo.translate(0, 0.5, 0);
   const capGeo = new THREE.SphereGeometry(3.3, 22, 16), ringGeo = new THREE.RingGeometry(4.4, 6.6, 32); ringGeo.rotateX(-Math.PI / 2);
   const pins = o.rows.map(r => {
-    const [x, y] = PX(r.s.lon, r.s.lat), P = provBy[r.s.prov], h = Math.max(3, (pv(r) || 0) * HS), col = o.pinCol ? o.pinCol(r) : ispuCol(r.mean);
+    const [x, y] = PX(r.s.lon, r.s.lat), P = provBy[r.s.prov], h = pinH(pv(r) || 0), col = o.pinCol ? o.pinCol(r) : ispuCol(r.mean);
     const mat = new THREE.MeshStandardMaterial({ color: col, roughness: 0.55 });
     const m = new THREE.Mesh(pinGeo, mat), cap = new THREE.Mesh(capGeo, mat);
     const ring = new THREE.Mesh(ringGeo, new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.85 }));
