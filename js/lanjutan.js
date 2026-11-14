@@ -52,13 +52,7 @@ PAGES.ambang = {
     const pc = v => fp(100 * (v - 1));
     const fu = R.findIndex((v, i) => i > 0 && v != null && v >= 1.1);   // pita pertama dengan kasus naik jelas (>= 1,1 kali)
     const ambLead = fu < 0 ? `${LJ_OUT[o]} tidak naik jelas pada kadar PM2.5 mana pun yang diuji.` : fu <= 2 ? `${LJ_OUT[o]} sudah naik jelas di pita <b>${LJ_BIN[fu][1]} µg/m³</b>, sebelum baku harian terlampaui.` : `${LJ_OUT[o]} baru naik jelas di pita <b>${LJ_BIN[fu][1]} µg/m³</b>, setelah baku harian terlampaui.`;
-    return `<div class="grid">
-      ${ljTutup('ambang', `Kasus pernapasan naik <b>${pc(rr[2])}</b> dan kematian <b>${pc(rd[2])}</b> pada hari 35–55 µg/m³; pada 55–100 naik <b>${pc(rr[3])}</b>, dan di atas 250 kematian mencapai <b>${f(rd[6], 1)}×</b> hari biasa.`,
-        [['Dinas Kesehatan provinsi', 'Kirim peringatan khusus balita, lansia, dan penderita asma/PPOK saat PM2.5 harian > 35 µg/m³', 'Setiap hari, mulai sekarang'],
-         ['Sekolah dan Dinas Pendidikan', 'Beri tahu guru dan orang tua lewat sekolah saat PM2.5 hari itu > 35 µg/m³, lalu batasi aktivitas luar ruang siswa yang rentan, misalnya penderita asma', 'Hari yang sama'],
-         ['RS rujukan', 'Siapkan tambahan tenaga pernapasan sejak > 35 µg/m³, bukan menunggu > 55', 'Hari yang sama (kasus naik tanpa jeda)']],
-        'ini hubungan statistik pada data sintetis panitia. Angka 35 adalah titik kenaikan pertama di data ini, bukan baku resmi.')}
-      </div>`;
+    return '';   // bagian ini dikosongkan (grafik ambang dihapus)
   },
   mount(C) {
   },
