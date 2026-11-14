@@ -429,6 +429,13 @@ PAGES.t1 = {
     return ph({ k: 'Langkah 1 · Kondisi', h: 'Seberapa buruk udara kita?', lede, goal: 1,
       scope: `Dasar: ${rows.length} stasiun berdata · rata-rata dari ${term('hari sah')} · baku PP 22/2021 · nilai terukur, bukan prediksi.` }) +
       `<div class="grid">
+      <h2 class="t-sec">Kenapa PM2.5?</h2>
+      ${whyP.length > 1 ? card({ id: 'why', span: 's12', h: 'h260', title: 'Kenapa fokus pada partikel, dan kenapa PM2.5?',
+        sub: `Kiri: persen hari-stasiun yang melewati ${term('baku 24 jam', 'baku harian')} untuk enam polutan (CO dan O₃ memakai baku 8 jam). Kanan: PM10 terhadap PM2.5 per hari.`,
+        lead: `Gas jarang melewati baku, dan PM10 bergerak hampir sama dengan PM2.5, jadi PM2.5 sudah cukup mewakili.`, note: nt(`Gas (NO₂, SO₂, CO, O₃) hampir tidak pernah melewati baku (maks ${f(gasMax, 1)}% hari), jadi masalahnya partikel. PM10 lebih sering lewat baku (${f(wp('pm10').pct, 1)}% vs ${f(wp('pm25').pct, 1)}%), tetapi bergerak hampir sama dengan PM2.5 (r = 0,997). PM2.5 dipilih karena masuk sampai paru dalam dan darah, lebih banyak stasiun melewati baku tahunannya (${wp('pm25').ab} vs ${wp('pm10').ab}), dan menjadi acuan ${term('ISPU')}.`,
+          'Grafik mengukur seberapa sering baku dilewati, bukan dampak kesehatan. Titik scatter adalah sampel; persentase ikut filter.'),
+        table: () => ({ cols: [{ k: 'l', l: 'Polutan' }, { k: 'pct', l: '% hari di atas baku harian', num: 1, fmt: v => f(v, 1) }, { k: 'ab', l: 'Stasiun di atas baku tahunan', num: 1, fmt: (v, r) => r.thn ? `${v} / ${r.m}` : '–' }], rows: whyP }),
+        info: { rumus: '% hari = hari-stasiun sah dengan rata-rata harian (CO, O₃: maksimum rata-rata bergerak 8 jam) di atas baku PP 22/2021 ÷ seluruh hari-stasiun sah. Korelasi PM2.5–PM10: Pearson harian per stasiun, median antarstasiun 0,997 (terendah 0,959); median rasio PM2.5/PM10 0,67.', data: 'Data per jam → harian, 25 stasiun', cat: 'Korelasi dan rasio dihitung sekali dari daily.parquet (folder analisis/), tidak ikut filter.' } }) : ''}
       <h2 class="t-sec">Bagaimana tren-nya?</h2>
       ${card({ id: 'tren', span: 's12', h: 'h260', title: `Bagaimana ${P.l} berubah tiap bulan?`, sub: `Rata-rata semua stasiun yang dipilih per bulan${S.pol === 'pm25' ? ', dengan garis pedoman WHO dan baku tahunan' : ''}.`, lead: trLead,
         note: nt(trLead || '', 'Rata-rata antarstasiun yang berdata pada bulan itu; Oktober 2026 hanya sampai 14 Oktober.'),
@@ -441,13 +448,6 @@ PAGES.t1 = {
       ${nWho != null || nThn != null ? card({ id: 'bk', span: 's6', h: 'h260', title: 'Berapa stasiun yang memenuhi baku?', sub: 'Rata-rata sepanjang periode terhadap pedoman WHO dan baku tahunan PP 22/2021.', lead: bkLead,
         note: nt(bkLead || '', 'Dibandingkan memakai rata-rata seluruh periode, bukan satu tahun penuh.'),
         info: { rumus: 'Stasiun memenuhi bila rata-rata PM2.5 periode ≤ 5 (WHO) atau ≤ 15 µg/m³ (baku tahunan).', data: 'pm25 harian' } }) : ''}
-      <h2 class="t-sec">Kenapa PM2.5?</h2>
-      ${whyP.length > 1 ? card({ id: 'why', span: 's12', h: 'h260', title: 'Kenapa fokus pada partikel, dan kenapa PM2.5?',
-        sub: `Kiri: persen hari-stasiun yang melewati ${term('baku 24 jam', 'baku harian')} untuk enam polutan (CO dan O₃ memakai baku 8 jam). Kanan: PM10 terhadap PM2.5 per hari.`,
-        lead: `Gas jarang melewati baku, dan PM10 bergerak hampir sama dengan PM2.5, jadi PM2.5 sudah cukup mewakili.`, note: nt(`Gas (NO₂, SO₂, CO, O₃) hampir tidak pernah melewati baku (maks ${f(gasMax, 1)}% hari), jadi masalahnya partikel. PM10 lebih sering lewat baku (${f(wp('pm10').pct, 1)}% vs ${f(wp('pm25').pct, 1)}%), tetapi bergerak hampir sama dengan PM2.5 (r = 0,997). PM2.5 dipilih karena masuk sampai paru dalam dan darah, lebih banyak stasiun melewati baku tahunannya (${wp('pm25').ab} vs ${wp('pm10').ab}), dan menjadi acuan ${term('ISPU')}.`,
-          'Grafik mengukur seberapa sering baku dilewati, bukan dampak kesehatan. Titik scatter adalah sampel; persentase ikut filter.'),
-        table: () => ({ cols: [{ k: 'l', l: 'Polutan' }, { k: 'pct', l: '% hari di atas baku harian', num: 1, fmt: v => f(v, 1) }, { k: 'ab', l: 'Stasiun di atas baku tahunan', num: 1, fmt: (v, r) => r.thn ? `${v} / ${r.m}` : '–' }], rows: whyP }),
-        info: { rumus: '% hari = hari-stasiun sah dengan rata-rata harian (CO, O₃: maksimum rata-rata bergerak 8 jam) di atas baku PP 22/2021 ÷ seluruh hari-stasiun sah. Korelasi PM2.5–PM10: Pearson harian per stasiun, median antarstasiun 0,997 (terendah 0,959); median rasio PM2.5/PM10 0,67.', data: 'Data per jam → harian, 25 stasiun', cat: 'Korelasi dan rasio dihitung sekali dari daily.parquet (folder analisis/), tidak ikut filter.' } }) : ''}
       <h2 class="t-sec">Seberapa buruk, dan di mana?</h2>
       ${card({ id: 'tmap', span: 's12', h: 'h520', title: 'Di mana udaranya paling buruk?', sub: tmSub, ctrl: seg('tmode', tmOpts, tmode) + (tmode === 'bulan' ? `<span class="tm-sl"><button type="button" class="btn sm" id="tmPlay" aria-label="Putar animasi bulanan">▶</button><input type="range" id="tmSl" min="${S.from}" max="${S.to}" step="1" value="${tbm}" aria-label="Pilih bulan"><b id="tmLbl">${fm(tbm)}</b></span>` : ''), legend: tmLegend,
         lead: tmLead, note: tmLead ? nt(tmLead, short ? 'Baku tahunan berlaku untuk setahun penuh; untuk periode lebih pendek hanya indikasi.' : '') : '',
