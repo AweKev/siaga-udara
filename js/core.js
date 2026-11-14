@@ -178,7 +178,7 @@ function polish(opt) {
   }
   return opt;
 }
-/* tooltip sumbu seragam di semua grafik: penanda = garis pendek berwarna sama dengan garisnya, tanggal/kategori sekali, panel atas dulu lalu bawah */
+/* tooltip sumbu seragam di semua grafik: penanda = garis pendek berwarna sama dengan garisnya, tanggal/kategori sekali, panel atas dulu lalu bawah, di tiap panel dari nilai terbesar */
 const tipMk = p => p.seriesType === 'line' ? `<i style="display:inline-block;width:12px;height:3px;border-radius:2px;background:${p.color};margin-right:7px;vertical-align:middle"></i>` : `<i style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${typeof p.color === 'string' ? p.color : 'var(--muted)'};margin-right:6px;vertical-align:-1px"></i>`;
 function axisTipStyle(opt) {
   [].concat(opt.series || []).forEach(s => { if (s && s.type === 'line' && s.lineStyle && typeof s.lineStyle.color === 'string' && !(s.itemStyle && s.itemStyle.color)) s.itemStyle = Object.assign({}, s.itemStyle, { color: s.lineStyle.color }); });
@@ -187,7 +187,7 @@ function axisTipStyle(opt) {
   tt.formatter = ps => {
     const arr = [].concat(ps).map(p => Object.assign({}, p, { marker: tipMk(p) }));
     if (user) return user(arr);
-    const o = arr.filter(p => (Array.isArray(p.value) ? p.value[1] : p.value) != null).sort((a, b) => (a.axisIndex || 0) - (b.axisIndex || 0) || a.seriesIndex - b.seriesIndex);
+    const o = arr.filter(p => (Array.isArray(p.value) ? p.value[1] : p.value) != null).sort((a, b) => (a.axisIndex || 0) - (b.axisIndex || 0) || ((Array.isArray(b.value) ? b.value[1] : b.value) - (Array.isArray(a.value) ? a.value[1] : a.value)) || a.seriesIndex - b.seriesIndex);
     if (!o.length) return '';
     let h = `<b>${o[0].axisValueLabel ?? o[0].name}</b>`, last = o[0].axisIndex || 0;
     for (const p of o) {
