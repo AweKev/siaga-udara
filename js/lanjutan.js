@@ -120,11 +120,9 @@ PAGES.kalender = {
     const dTxt = d => { const x = new Date(Date.UTC(2026, 0, 1) + d * 864e5); return x.getUTCDate() + ' ' + BULAN[x.getUTCMonth()]; };
     const e0 = early[0];
     this._t = { stable, early };
-    return ph({ k: ljKick(2, 'Kapan harus bersiap'), h: 'Kapan musim asap mulai?',
-      lede: 'Melacak kapan musim asap mulai dan berakhir di tiap stasiun setiap tahun.',
-      scope: `Awal musim = hari pertama sejak 1 Juni dengan rata-rata 7 hari > ${BAKU} µg/m³ · hanya stasiun yang bersih Jan–Mei (kronis tidak dihitung) · filter global tidak berlaku` }) +
-      `<div class="grid">
+    return `<div class="grid">
       <h2 class="t-sec">Kapan musim asap mulai?</h2>
+      <p class="sec-note">Awal musim = hari pertama sejak 1 Juni dengan rata-rata 7 hari > ${BAKU} µg/m³ · hanya stasiun yang bersih Jan–Mei (kronis tidak dihitung) · filter global tidak berlaku</p>
       ${card({ id: 'kal', span: 's12', title: 'Kapan musim asap mulai di tiap stasiun?', sub: `Pilih satu stasiun untuk melihat kalender penuhnya. Tanggal mulai = hari pertama rata-rata 7 hari PM2.5 di atas ${BAKU} µg/m³.`,
         body: ljKalBody(this, rows, K),
                 lead: (() => { const a = dTxt(on26[Math.floor(on26.length * .25)]), b = dTxt(on26[Math.ceil(on26.length * .75) - 1]); return `Awal musim asap 2026 umumnya jatuh sekitar <b>${a === b ? a : a + '–' + b}</b>, pekan yang sama dengan 2024 dan 2025.`; })(), note: nt(`Di ${stable.length} stasiun yang stabil, awal musim 2026 umumnya jatuh pada <b>${dTxt(on26[Math.floor(on26.length * .25)])}–${dTxt(on26[Math.ceil(on26.length * .75) - 1])}</b>, pekan yang sama dengan 2024 dan 2025; musim 2024 dan 2025 berakhir awal November.${early.length ? ` Yang maju lebih dari 3 minggu: <b>${early.map(r => `${esc(stShort(r.c))} (${-r.shift} hari)`).join(', ')}</b>.` : ''}`,
